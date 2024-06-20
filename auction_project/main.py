@@ -12,7 +12,7 @@ def run_django():
 
 
 def run_telegram_bot():
-    import telegram_bot
+    from auction_project import telegram_bot
     telegram_bot.run_bot()
 
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     telegram_thread.start()
 
     # Ожидание, чтобы сервер Django успел запуститься перед отправкой запроса
-    time.sleep(1)
+    time.sleep(5)
 
     send_active_auctions()
 

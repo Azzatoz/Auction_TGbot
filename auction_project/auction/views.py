@@ -1,29 +1,82 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Lot, CompletedAuction
+from .models import User, Lot, CompletedAuction, Bid
+from django.db.models import Max
 import telebot
 import datetime
+import pytz
 import logging
+from auction_project.telegram_bot import create_auction_message, send_lot_to_channel, generate_deep_link
 
 logging.basicConfig(level=logging.INFO)
 bot = telebot.TeleBot('7075474227:AAG8Y7jASasiq9pumKmQQn_7L7dTikdF3T4')
 
-
 def get_lot_info(request, lot_id):
-    lot = get_object_or_404(Lot, id=lot_id)
-    lot_data = {
-        "title": lot.title,
-        "description": lot.description,
-        "start_price": lot.start_price,
-        "seller_link": lot.seller.telegram_link,
-        "end_time": lot.end_time.isoformat(),
-    }
-    return JsonResponse(lot_data)
+    """
+    Необходимо для получения информации в бота
+    :param request:
+    :param lot_id:
+    :return:
+    """
+    try:
+        lot = get_object_or_404(Lot, pk=lot_id)
+        lot_data = {
+            'id': lot.id,
+            'title': lot.title,
+            'description': lot.description,
+            'start_price': lot.start_price,
+            'seller_link': lot.seller.telegram_link,
+            'location': lot.location,
+            'start_time': lot.start_time.isoformat(),
+            'end_time': lot.end_time.isoformat(),
+            'images': lot.images.url if lot.images else None,
+        }
+        return JsonResponse(lot_data, safe=False)
+    except Lot.DoesNotExist:
+        raise Http404("Лот не найден")
+
+
+def get_user_lots(request, user_id):
+    """
+    Получение всех лотов, созданных пользователем
+    :param request:
+    :param user_id:
+    :return:
+    """
+    try:
+        user = get_object_or_404(User, pk=user_id)
+        lots = Lot.objects.filter(created_by=user)
+
+        if not lots.exists():
+            return JsonResponse({"status": "success", "message": "У пользователя нет активных лотов."}, status=200)
+
+        lots_data = [
+            {
+                'id': lot.id,
+                'title': lot.title,
+                'description': lot.description,
+                'start_price': lot.start_price,
+                'seller_link': lot.seller.telegram_link,
+                'location': lot.location,
+                'start_time': lot.start_time.isoformat(),
+                'end_time': lot.end_time.isoformat(),
+                'images': lot.images.url if lot.images else None,
+            }
+            for lot in lots
+        ]
+        return JsonResponse(lots_data, safe=False)
+    except User.DoesNotExist:
+        raise Http404("Пользователь не найден")
 
 
 def send_all_active_auctions_to_channel(request):
+    """
+    Отправка всех лотов в канал
+    :param request:
+    :return:
+    """
     logging.info("Функция send_all_active_auctions_to_channel была вызвана")
-    active_lots = Lot.objects.filter(end_time__gt=datetime.datetime.now(), is_sold=False)
+    active_lots = Lot.objects.filter(end_time__gt=datetime.datetime.now(pytz.UTC), is_sold=False)
     channel_id = '-1002148978810'
 
     if not active_lots:
@@ -31,17 +84,64 @@ def send_all_active_auctions_to_channel(request):
         return JsonResponse({"status": "success", "message": "Нет активных лотов для отправки"})
 
     for lot in active_lots:
-        lot_message = f"{lot.title}\n\n{lot.description}\n\nТекущая ставка: {lot.start_price}Р\nПродавец: {lot.seller.telegram_link}"
+        current_max_bid = Bid.objects.filter(lot=lot).aggregate(max_bid=Max('amount'))['max_bid'] or lot.start_price
+        lot_data = {
+            'id': lot.id,
+            'title': lot.title,
+            'description': lot.description,
+            'start_price': lot.start_price,
+            'seller_link': lot.seller.telegram_link,
+            'location': lot.location,
+            'images': lot.images.path if lot.images else None
+        }
+        lot_message = create_auction_message(lot_data)
+
+        if lot.telegram_message_id:
+            try:
+                update_lot_message(channel_id, lot.telegram_message_id, lot_message, lot.id)
+            except telebot.apihelper.ApiTelegramException as e:
+                if e.result_json['error_code'] == 400 and "message to edit not found" in e.result_json['description']:
+                    logging.warning(f"Сообщение с ID {lot.telegram_message_id} не найдено, отправка нового сообщения")
+                    try:
+                        message_id = send_lot_to_channel(lot_data)
+                        lot.telegram_message_id = message_id
+                        lot.save()
+                    except Exception as e:
+                        logging.error(f"Ошибка при повторной отправке сообщения о лоте {lot.id}: {str(e)}")
+                else:
+                    logging.error(f"Ошибка при обновлении сообщения лота {lot.id}: {e.result_json}")
+        else:
+            try:
+                message_id = send_lot_to_channel(lot_data)
+                lot.telegram_message_id = message_id
+                lot.save()
+            except Exception as e:
+                logging.error(f"Ошибка при отправке нового сообщения о лоте {lot.id}: {str(e)}")
+
+    return JsonResponse({"status": "success", "message": "Активные лоты обновлены в канале"})
+
+def update_lot_message(channel_id, message_id, new_message, lot_id):
+    """
+    Обновление сообщений в канале
+    :param channel_id:
+    :param message_id:
+    :param new_message:
+    :param lot_id:
+    :return:
+    """
+    try:
         markup = telebot.types.InlineKeyboardMarkup()
-        timer_button = telebot.types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot.id}")
+        timer_button = telebot.types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot_id}")
         info_button = telebot.types.InlineKeyboardButton("ℹ️ Инфо", callback_data="info")
-        open_lot_button = telebot.types.InlineKeyboardButton("🛍 Открыть лот", callback_data=f"open_lot_{lot.id}")
+        open_lot_button = telebot.types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot_id))
         markup.add(timer_button, info_button, open_lot_button)
 
-        logging.info(f"Отправка лота {lot.title} в канал")
-        bot.send_message(channel_id, lot_message, reply_markup=markup, disable_notification=True)
-
-    return JsonResponse({"status": "success", "message": "Активные лоты отправлены в канал"})
+        bot.edit_message_text(chat_id=channel_id, message_id=message_id, text=new_message, parse_mode='HTML', reply_markup=markup)
+    except telebot.apihelper.ApiTelegramException as e:
+        if e.result_json['error_code'] == 400 and "message is not modified" in e.result_json['description']:
+            logging.warning(f"Не удалось изменить сообщение с ID {message_id}: сообщение не изменилось")
+        else:
+            raise e
 
 
 def mark_lot_as_sold(request, lot_id, buyer_id):
@@ -58,7 +158,6 @@ def mark_lot_as_sold(request, lot_id, buyer_id):
     )
 
     return JsonResponse({"status": "success", "message": f"Лот {lot.title} продан покупателю {buyer.username}"})
-
 
 def retry_unsold_lots(request):
     unsold_lots = CompletedAuction.objects.filter(is_paid=False)

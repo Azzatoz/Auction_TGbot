@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Seller(models.Model):
     username = models.CharField(max_length=255)
     telegram_link = models.URLField()
 
     def __str__(self):
         return self.username
+
 
 class Lot(models.Model):
     title = models.CharField(max_length=255)
@@ -18,11 +20,14 @@ class Lot(models.Model):
     end_time = models.DateTimeField()
     images = models.ImageField(upload_to='lots/')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    document_type = models.CharField(max_length=50, choices=[('Jewelry', 'Jewelry'), ('Historical', 'Historical'), ('Standard', 'Standard')])
+    document_type = models.CharField(max_length=50, choices=[('Jewelry', 'Jewelry'), ('Historical', 'Historical'),
+                                                             ('Standard', 'Standard')])
+    telegram_message_id = models.IntegerField(blank=True, null=True)
     is_sold = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -31,7 +36,8 @@ class UserProfile(models.Model):
     auto_bid_access = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.user
+        return str(self.user)
+
 
 class CompletedAuction(models.Model):
     lot = models.ForeignKey(Lot, on_delete=models.CASCADE)
@@ -42,3 +48,13 @@ class CompletedAuction(models.Model):
 
     def __str__(self):
         return f"{self.lot.title} - {self.final_price}Р"
+
+
+class Bid(models.Model):
+    lot = models.ForeignKey(Lot, on_delete=models.CASCADE)
+    bidder = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Bid #{self.pk} on {self.lot.title} by {self.bidder.username} - {self.amount}Р"
