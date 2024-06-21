@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -13,20 +14,27 @@ class Seller(models.Model):
 class Lot(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    start_price = models.DecimalField(max_digits=10, decimal_places=2)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     location = models.CharField(max_length=255)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     images = models.ImageField(upload_to='lots/')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    document_type = models.CharField(max_length=50, choices=[('Jewelry', 'Jewelry'), ('Historical', 'Historical'),
-                                                             ('Standard', 'Standard')])
+    document_type = models.CharField(max_length=50, choices=[('Jewelry', 'Jewelry'), ('Historical', 'Historical'), ('Standard', 'Standard')])
     telegram_message_id = models.IntegerField(blank=True, null=True)
     is_sold = models.BooleanField(default=False)
+    current_bid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    next_bid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return self.title
+
+    def update_next_bid(self):
+        if self.current_bid == 0:
+            self.next_bid = self.start_price * Decimal('1.10')  # следущая ставка на 10% больше стартовой цены
+        else:
+            self.next_bid = self.current_bid * Decimal('1.10')  # следущая ставка на 10% больше текущей ставки
+        self.save()
 
 
 class UserProfile(models.Model):
@@ -58,3 +66,8 @@ class Bid(models.Model):
 
     def __str__(self):
         return f"Bid #{self.pk} on {self.lot.title} by {self.bidder.username} - {self.amount}Р"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.lot.current_bid = self.amount
+        self.lot.update_next_bid()

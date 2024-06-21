@@ -4,15 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="канал и бот работают">
+    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="работает меню, фотографии лотов">
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction_project/auction_project/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction_project/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/db.sqlite3" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction_project/telegram_bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +114,15 @@
       <option name="project" value="LOCAL" />
       <updated>1718803343051</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="работает меню, фотографии лотов">
+      <option name="closed" value="true" />
+      <created>1718911672585</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1718911672585</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -130,6 +138,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="канал и бот работают" />
-    <option name="LAST_COMMIT_MESSAGE" value="канал и бот работают" />
+    <MESSAGE value="работает меню, фотографии лотов" />
+    <option name="LAST_COMMIT_MESSAGE" value="работает меню, фотографии лотов" />
   </component>
 </project>
