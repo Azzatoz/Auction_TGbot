@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, Http404
 from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_exempt
 from .models import User, Lot, CompletedAuction, Bid
 from django.db.models import Max
 import telebot
@@ -78,6 +79,7 @@ def get_user_lots(request, user_id):
     except User.DoesNotExist:
         raise Http404("Пользователь не найден")
 
+@csrf_exempt
 def place_bid(request, lot_id):
     if request.method == 'POST':
         try:

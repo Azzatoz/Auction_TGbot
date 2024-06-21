@@ -4,15 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="работает меню, фотографии лотов">
-      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="возвратная точка">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction_project/auction/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction_project/auction/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction_project/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +118,15 @@
       <option name="project" value="LOCAL" />
       <updated>1718911672585</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="возвратная точка">
+      <option name="closed" value="true" />
+      <created>1718998181769</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1718998181769</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -139,6 +143,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="канал и бот работают" />
     <MESSAGE value="работает меню, фотографии лотов" />
-    <option name="LAST_COMMIT_MESSAGE" value="работает меню, фотографии лотов" />
+    <MESSAGE value="возвратная точка" />
+    <option name="LAST_COMMIT_MESSAGE" value="возвратная точка" />
   </component>
 </project>

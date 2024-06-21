@@ -153,11 +153,17 @@ def place_bid_bot(call):
         if created:
             UserProfile.objects.create(user=user)
 
+        # Получение CSRF-токена
         csrf_token_response = requests.get('http://localhost:8000/get_csrf_token/')
         csrf_token = csrf_token_response.json()['csrf_token']
-        headers = {'X-CSRFToken': csrf_token, 'Content-Type': 'application/json'}
+
+        headers = {
+            'X-CSRFToken': csrf_token,
+            'Content-Type': 'application/json'
+        }
         json_data = {"user_id": user.id}
-        response = requests.post(f'http://localhost:8000/lots/{lot_id}/', json=json_data, headers=headers)
+
+        response = requests.post(f'http://localhost:8000/lots/{lot_id}/place_bid/', json=json_data, headers=headers)
         if response.status_code == 200:
             lot = response.json()
             lot_message = create_auction_message(lot)
