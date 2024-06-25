@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Запланировать лот</title>
+</head>
+<body>
+    <h1>Запланировать лот: {{ lot.title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="scheduled_time">Время планирования:</label>
+        <input type="datetime-local" name="scheduled_time" id="scheduled_time">
+        <button type="submit">Запланировать</button>
+    </form>
+</body>
+</html>

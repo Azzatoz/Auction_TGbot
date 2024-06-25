@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Удалить лот</title>
+</head>
+<body>
+    <h1>Удалить лот: {{ lot.title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <p>Вы уверены, что хотите удалить этот лот? Это будет стоить вам 5% от текущей ставки.</p>
+        <button type="submit">Удалить</button>
+    </form>
+</body>
+</html>

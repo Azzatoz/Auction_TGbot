@@ -10,11 +10,12 @@ import datetime
 import pytz
 import logging
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auction_project.settings')
 django.setup()
 
-from auction.models import User, UserProfile
+from auction.models import User, UserProfile, Lot
 
 BOT_TOKEN = '7075474227:AAG8Y7jASasiq9pumKmQQn_7L7dTikdF3T4'
 CHANNEL_ID = '-1002148978810'
@@ -33,13 +34,15 @@ def create_auction_message(lot):
     :param lot:
     :return:
     """
+
     message = (
         f"Название: {lot.get('title', 'Нет информации')}\n\n"
         f"Описание: {lot.get('description', 'Нет информации')}\n\n"
         f"Текущая ставка: {lot.get('current_bid', 'Нет информации')}Р\n"
         f"Продавец: {lot.get('seller_link', 'Нет информации')}\n"
         f"Местоположение: {lot.get('location', 'Нет информации')}\n\n"
-        f"Следующая ставка: {lot.get('next_bid', 'Нет информации')}\n"
+        f"Следующая ставка: {lot.get('next_bid', 'Нет информации')}\n\n"
+        f"{lot.get('last_bid', '_')}\n"
     )
 
     return message
@@ -47,24 +50,35 @@ def create_auction_message(lot):
 
 def send_lot_to_channel(lot):
     """
-    Сообщения отправляемые в канал
-    :param lot:
-    :return:
+    Отправляет сообщение о лоте в канал.
+    :param lot: объект Lot
+    :return: ID отправленного сообщения
     """
-    message = create_auction_message(lot)
+    message = create_auction_message({
+        'id': lot.id,
+        'title': lot.title,
+        'description': lot.description,
+        'current_bid': lot.current_bid,
+        'seller_link': lot.seller.telegram_link,
+        'location': lot.location,
+        'next_bid': lot.next_bid,
+        'last_bidder': lot.get_last_bidder(),
+        'images': lot.images.path if lot.images else None
+    })
     markup = types.InlineKeyboardMarkup()
-    timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot['id']}")
+    timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot.id}")
     info_button = types.InlineKeyboardButton("ℹ️ Инфо", callback_data="info")
-    open_lot_button = types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot['id']))
+    open_lot_button = types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot.id))
     markup.add(timer_button, info_button, open_lot_button)
 
-    if lot.get('images'):
-        with open(lot['images'], 'rb') as photo:
+    if lot.images:
+        with open(lot.images.path, 'rb') as photo:
             message_id = bot.send_photo(CHANNEL_ID, photo, caption=message, reply_markup=markup).message_id
     else:
         message_id = bot.send_message(CHANNEL_ID, message, reply_markup=markup).message_id
 
     return message_id
+
 
 
 def generate_deep_link(lot_id):
@@ -115,7 +129,7 @@ def send_welcome(message):
             markup = types.InlineKeyboardMarkup()
             timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot_id}")
             info_button = types.InlineKeyboardButton("ℹ️ Инфо", callback_data="info")
-            next_bid = lot.get('next_bid', 'Нет информации')  # Используем get() с значением по умолчанию
+            next_bid = lot.get('next_bid')
             bid_button = types.InlineKeyboardButton(f"Сделать ставку {next_bid}Р", callback_data=f"bid_{lot_id}")
             hidden_bid_button = types.InlineKeyboardButton("Настроить скрытую ставку",
                                                            callback_data=f"hidden_bid_{lot_id}")
@@ -194,6 +208,69 @@ def place_bid_bot(call):
         bot.answer_callback_query(call.id, "Ошибка обработки запроса. Пожалуйста, попробуйте позже.")
 
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('hidden_bid_'))
+def set_hidden_bid(call):
+    lot_id = call.data.split('_')[2]
+    user_id = call.from_user.id
+    markup = types.InlineKeyboardMarkup()
+    confirm_button = types.InlineKeyboardButton("Подтвердить скрытую ставку", callback_data=f"confirm_hidden_bid_{lot_id}_{user_id}")
+    back_button = types.InlineKeyboardButton("Назад", callback_data="main_menu")
+    markup.add(confirm_button, back_button)
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Вы уверены, что хотите сделать скрытую ставку?", reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('confirm_hidden_bid_'))
+def place_hidden_bid(call):
+    try:
+        _, action, lot_id, user_id = call.data.split('_', 3)
+        user = get_object_or_404(User, pk=user_id)
+        lot = get_object_or_404(Lot, pk=lot_id)
+
+        # Логика скрытой ставки
+        bid = Bid.objects.create(lot=lot, bidder=user, amount=lot.next_bid)
+
+        bot.answer_callback_query(call.id, "Скрытая ставка сделана.", show_alert=True)
+    except Exception as e:
+        logging.error(f"Ошибка при обработке скрытой ставки: {e}")
+        bot.answer_callback_query(call.id, "Ошибка обработки скрытой ставки. Пожалуйста, попробуйте позже.")
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('media_'))
+def send_media(call):
+    lot_id = call.data.split('_')[1]
+    lot = get_object_or_404(Lot, pk=lot_id)
+    if lot.images:
+        with open(lot.images.path, 'rb') as photo:
+            bot.send_document(call.message.chat.id, photo)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('custom_price_'))
+def custom_price(call):
+    lot_id = call.data.split('_')[2]
+    user_id = call.from_user.id
+    bot.send_message(call.message.chat.id, "Введите сумму ставки:")
+
+    @bot.message_handler(func=lambda message: True)
+    def get_custom_price(message):
+        try:
+            custom_bid = Decimal(message.text)
+            user = get_object_or_404(User, pk=user_id)
+            lot = get_object_or_404(Lot, pk=lot_id)
+
+            if custom_bid > user.userprofile.balance:
+                bot.send_message(message.chat.id, "Недостаточно средств на балансе.")
+                return
+
+            Bid.objects.create(lot=lot, bidder=user, amount=custom_bid)
+            lot.current_bid = custom_bid
+            lot.update_next_bid()
+            lot.save()
+
+            bot.send_message(message.chat.id, f"Ставка в {custom_bid}Р сделана.")
+        except Exception as e:
+            logging.error(f"Ошибка при обработке пользовательской ставки: {e}")
+            bot.send_message(message.chat.id, "Ошибка при обработке ставки. Пожалуйста, попробуйте позже.")
+
 @bot.callback_query_handler(func=lambda call: call.data == 'main_menu')
 def go_back(call):
     send_main_menu(call.message)
@@ -232,18 +309,26 @@ def handle_main_menu_options(call):
     try:
         if call.data == "my_lots":
             user_id = call.from_user.id
-            response = requests.get(f'http://localhost:8000/user_lots/{user_id}/')
+            response = requests.get(f'http://localhost:8000/get_user_lots/{user_id}/')
             if response.status_code == 200:
                 lots = response.json()
                 if 'message' in lots:
                     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                           text=lots['message'])
                 else:
+                    # Формируем одно сообщение с информацией о лотах
+                    lots_message = ""
                     for lot in lots:
-                        lot_message = create_auction_message(lot)
-                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              text=lot_message)
-                    add_main_menu_button(call.message)
+                        lot_message = (
+                            f"Название: {lot['title']}\n"
+                            f"Ссылка на лот: {lot['channel_message_url']}\n"
+                            f"Ставка пользователя: {lot['user_bid']}Р\n\n"
+                        )
+                        lots_message += lot_message
+
+                    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          text=lots_message.strip())
+                add_main_menu_button(call.message)
             else:
                 bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       text="Не удалось загрузить ваши лоты.")
@@ -286,9 +371,11 @@ def handle_main_menu_options(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=leaderboard_text)
             add_main_menu_button(call.message)
-
     except Exception as e:
-        print(f"Error in handle_main_menu_options: {str(e)}")
+        # Обработка ошибок
+        error_message = f"Произошла ошибка: {str(e)}"
+        bot.send_message(chat_id=call.message.chat.id, text=error_message)
+        add_main_menu_button(call.message)
 
 
 def add_main_menu_button(message):

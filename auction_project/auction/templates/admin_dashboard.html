@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Админская панель</title>
+</head>
+<body>
+    <h1>Админская панель</h1>
+    <a href="{% url 'create_lot' %}">Создать лот</a>
+    <h2>Ваши лоты</h2>
+    <ul>
+        {% for lot in lots %}
+            <li>{{ lot.title }} - {{ lot.current_bid }}Р
+                <a href="{% url 'schedule_lot' lot.id %}">Запланировать</a>
+                <a href="{% url 'delete_lot' lot.id %}">Удалить</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="возвратная точка">
+    <list default="true" id="f3421d53-5583-4f6d-9e5a-3a4704347da9" name="Changes" comment="сделал изменение ставки">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction_project/auction/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction_project/auction/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction_project/auction/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/auction_project/telegram_bot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction_project/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/auction_project/db.sqlite3" afterDir="false" />
     </list>
@@ -18,6 +21,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="HTML File" />
         <option value="Python Script" />
       </list>
     </option>
@@ -37,6 +41,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;Python.telegram_bot.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
@@ -126,8 +131,27 @@
       <option name="project" value="LOCAL" />
       <updated>1718998181769</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="сделал изменение ставки">
+      <option name="closed" value="true" />
+      <created>1718999005690</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1718999005690</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -144,6 +168,7 @@
     <MESSAGE value="канал и бот работают" />
     <MESSAGE value="работает меню, фотографии лотов" />
     <MESSAGE value="возвратная точка" />
-    <option name="LAST_COMMIT_MESSAGE" value="возвратная точка" />
+    <MESSAGE value="сделал изменение ставки" />
+    <option name="LAST_COMMIT_MESSAGE" value="сделал изменение ставки" />
   </component>
 </project>
