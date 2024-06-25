@@ -28,58 +28,77 @@ info_text = """После окончания торгов, победитель 
 """
 
 
-def create_auction_message(lot):
+def create_auction_message(lot_data):
     """
     Создание сообщение о лоте для последующего использования
-    :param lot:
+    :param lot_data:
     :return:
     """
-
     message = (
-        f"Название: {lot.get('title', 'Нет информации')}\n\n"
-        f"Описание: {lot.get('description', 'Нет информации')}\n\n"
-        f"Текущая ставка: {lot.get('current_bid', 'Нет информации')}Р\n"
-        f"Продавец: {lot.get('seller_link', 'Нет информации')}\n"
-        f"Местоположение: {lot.get('location', 'Нет информации')}\n\n"
-        f"Следующая ставка: {lot.get('next_bid', 'Нет информации')}\n\n"
-        f"{lot.get('last_bid', '_')}\n"
+        f"Название: {lot_data.get('title', 'Нет информации')}\n\n"
+        f"Описание: {lot_data.get('description', 'Нет информации')}\n\n"
+        f"Текущая ставка: {lot_data.get('current_bid', 'Нет информации')}Р\n"
+        f"Продавец: {lot_data.get('seller_link', 'Нет информации')}\n"
+        f"Местоположение: {lot_data.get('location', 'Нет информации')}\n\n"
+        f"Следующая ставка: {lot_data.get('next_bid', 'Нет информации')}\n"
+        f"{lot_data.get('last_bidder', '_')}\n"
     )
-
     return message
 
 
-def send_lot_to_channel(lot):
+def send_lot_to_channel(lot_data):
     """
     Отправляет сообщение о лоте в канал.
-    :param lot: объект Lot
+    :param lot_data: данные о лоте в виде словаря
     :return: ID отправленного сообщения
     """
-    message = create_auction_message({
-        'id': lot.id,
-        'title': lot.title,
-        'description': lot.description,
-        'current_bid': lot.current_bid,
-        'seller_link': lot.seller.telegram_link,
-        'location': lot.location,
-        'next_bid': lot.next_bid,
-        'last_bidder': lot.get_last_bidder(),
-        'images': lot.images.path if lot.images else None
-    })
+    message = create_auction_message(lot_data)
     markup = types.InlineKeyboardMarkup()
-    timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot.id}")
+    timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot_data['id']}")
     info_button = types.InlineKeyboardButton("ℹ️ Инфо", callback_data="info")
-    open_lot_button = types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot.id))
+    open_lot_button = types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot_data['id']))
     markup.add(timer_button, info_button, open_lot_button)
 
-    if lot.images:
-        with open(lot.images.path, 'rb') as photo:
+    if lot_data['images']:
+        with open(lot_data['images'], 'rb') as photo:
             message_id = bot.send_photo(CHANNEL_ID, photo, caption=message, reply_markup=markup).message_id
     else:
         message_id = bot.send_message(CHANNEL_ID, message, reply_markup=markup).message_id
 
     return message_id
 
-
+# def send_lot_to_channel(lot):
+#     """
+#     Отправляет сообщение о лоте в канал.
+#     :param lot: объект Lot
+#     :return: ID отправленного сообщения
+#     """
+#     lot_data = {
+#         'id': lot.id,
+#         'title': lot.title,
+#         'description': lot.description,
+#         'current_bid': lot.current_bid,
+#         'seller_link': lot.seller.telegram_link,
+#         'location': lot.location,
+#         'next_bid': lot.next_bid,
+#         'last_bidder': lot.get_last_bidder(),
+#         'images': lot.images.path if lot.images else None
+#     }
+#     message = create_auction_message(lot_data)
+#     markup = types.InlineKeyboardMarkup()
+#     timer_button = types.InlineKeyboardButton("⏲ Таймер", callback_data=f"timer_{lot.id}")
+#     info_button = types.InlineKeyboardButton("ℹ️ Инфо", callback_data="info")
+#     open_lot_button = types.InlineKeyboardButton("🛍 Открыть лот", url=generate_deep_link(lot.id))
+#     markup.add(timer_button, info_button, open_lot_button)
+#
+#     if lot.images:
+#         with open(lot.images.path, 'rb') as photo:
+#             message_id = bot.send_photo(CHANNEL_ID, photo, caption=message, reply_markup=markup).message_id
+#     else:
+#         message_id = bot.send_message(CHANNEL_ID, message, reply_markup=markup).message_id
+#
+#     return message_id
+#
 
 def generate_deep_link(lot_id):
     """
@@ -226,7 +245,7 @@ def place_hidden_bid(call):
         user = get_object_or_404(User, pk=user_id)
         lot = get_object_or_404(Lot, pk=lot_id)
 
-        # Логика скрытой ставки
+        # TODO: Логика скрытой ставки
         bid = Bid.objects.create(lot=lot, bidder=user, amount=lot.next_bid)
 
         bot.answer_callback_query(call.id, "Скрытая ставка сделана.", show_alert=True)
